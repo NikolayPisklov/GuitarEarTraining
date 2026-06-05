@@ -2,23 +2,23 @@
   <section class="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-sm flex-col justify-center">
     <div class="mb-7 text-center">
       <h1 class="text-2xl font-semibold tracking-normal text-zinc-950">
-        Регистрация
+        Войдите в аккаунт
       </h1>
       <p class="mt-2 text-sm leading-6 text-zinc-600">
-        Создайте аккаунт, чтобы начать тренировки.
+        Введите свои данные для входа в аккаунт.
       </p>
     </div>
 
     <form
       class="space-y-5 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
-      @submit.prevent="handleRegister"
+      @submit.prevent="handleLogIn"
     >
       <div>
         <label for="email" class="mb-2 block text-sm font-medium text-zinc-800">
           Почта
         </label>
-        <p v-if="duplicateUserNameError" class="text-red-500 mb-2">
-          {{ duplicateUserNameError }}
+        <p v-if="logInError" class="text-red-500 mb-2">
+          {{ logInError }}
         </p>
         <input
           id="email"
@@ -27,7 +27,7 @@
           autocomplete="email"
           :disabled="isLoading"
           required
-          placeholder="you@example.com"
+          placeholder="Введите почту"
           class="h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-zinc-100"
         />
       </div>
@@ -36,14 +36,6 @@
         <label for="password" class="mb-2 block text-sm font-medium text-zinc-800">
           Пароль
         </label>
-        <ul v-if="passwordErrors.length > 0" class="text-red-500 list-disc pl-5 mb-2">
-          <li 
-            v-for="error in passwordErrors"
-            :key="error"
-          >
-            {{ error }}
-          </li>
-        </ul>
         <input
           id="password"
           v-model="password"
@@ -51,7 +43,7 @@
           autocomplete="new-password"
           :disabled="isLoading"
           required
-          placeholder="Не меньше 8 символов"
+          placeholder="Введите пароль"
           class="h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:bg-zinc-100"
         />
       </div>
@@ -61,7 +53,7 @@
         :disabled="isLoading"
         class="h-11 w-full rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-zinc-400"
       >
-        {{ isLoading ? 'Регистрируем...' : 'Зарегистрироваться' }}
+        {{ isLoading ? 'Входим...' : 'Войти' }}
       </button>
     </form>
   </section>
@@ -70,54 +62,36 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import {register} from '../services/auth'
+import {login} from '../services/auth'
+import { isUserWithName } from '../services/profile'
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 
-const passwordErrors = ref([])
-const duplicateUserNameError = ref('')
+const logInError = ref('')
 
-async function handleRegister() {
+async function handleLogIn() {
   try{
-    clearErrors()
     isLoading.value = true
-    await register(email.value, password.value)
+    await login(email.value, password.value)
     isLoading.value = false
-    router.push('/login')
+    if(!await isUserWithName()){
+      router.push('/userNameForm')
+    }
+    else{
+      router.push('/home')
+    }
   }
   catch(error){
     isLoading.value = false
-    if(error.response.status === 400){
-      const errors = error.response.data.errors
-      errorListHandler(errors)
+    if(error.response.status === 401){
+      logInError.value = 'Неверый логин или пароль.'
     }
-  }
-}
-function clearErrors(){
-  duplicateUserNameError.value = ''
-  passwordErrors.value = []
-}
-function errorListHandler(errors){
-  if(errors.DuplicateUserName){
-    duplicateUserNameError.value = 'Пользователь с такой почтой уже существует.'
-  }
-  if(errors.PasswordRequiresLower){
-    passwordErrors.value.push('Пароль должен содержать латинскую букву нижнего регистра.')
-  }
-  if(errors.PasswordRequiresDigit){
-    passwordErrors.value.push('Пароль должен содержать цифру.')
-  }
-  if(errors.PasswordRequiresNonAlphanumeric){
-    passwordErrors.value.push('Пароль должен содержать специальный символ: *, ?, _ и т.п.')
-  }
-  if(errors.PasswordRequiresUpper){
-    passwordErrors.value.push('Пароль должен содержать латинскую букву верхнего регистра.')
-  }
-  if(errors.PasswordTooShort){
-    passwordErrors.value.push('Пароль должен состоять минимум из 6 символов.')
+    else{
+      console.log(error.response)
+    }
   }
 }
 </script>
