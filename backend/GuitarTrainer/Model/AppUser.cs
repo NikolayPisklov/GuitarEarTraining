@@ -6,5 +6,7 @@ namespace GuitarTrainer.Model
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
+
+        public ICollection<Attempt> Attempts { get; set; } = new List<Attempt>();
     }
 }
