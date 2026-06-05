@@ -14,6 +14,7 @@ namespace GuitarTrainer.Model
         public DbSet<Attempt> Attempts { get; set; }
         public DbSet<Sample> Samples { get; set; }
         public DbSet<Type> Types { get; set; } 
+        public DbSet<AnswerOption> AnswerOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -37,6 +38,11 @@ namespace GuitarTrainer.Model
             builder.Entity<Sample>(entity =>
             {
                 entity.Property(s => s.Path).HasMaxLength(255);
+            });
+            builder.Entity<AnswerOption>(entity =>
+            {
+                entity.HasIndex(a => new { a.ExerciseId, a.Code}).IsUnique();
+                entity.Property(a => a.Code).HasMaxLength(100);
             });
 
         }

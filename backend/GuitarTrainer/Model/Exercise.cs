@@ -9,5 +9,6 @@
         public Type Type { get; set; } = null!;
         public ICollection<Sample> Samples { get; set; } = new List<Sample>();
         public ICollection<Attempt> Attempts { get; set; } = new List<Attempt>();
+        public ICollection<AnswerOption> AnswerOptions { get; set; } = new List<AnswerOption>();
     }
 }
