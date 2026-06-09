@@ -71,14 +71,26 @@ authGroup.MapGet("/isUserWithName", async (ClaimsPrincipal user, IUserProfileSer
     Guid userGuidId;
     if(!Guid.TryParse(userId, out userGuidId))
     {
-        return Results.BadRequest("User Id parsing error!");
+        return Results.Unauthorized();
     }
     bool result = await profileService.IsUserWithNameAsync(userGuidId);
     return Results.Ok(result);
 });
 
-authGroup.MapPost("/updateUserFullName", async (ClaimsPrincipal user, IUserProfileService profileService,
-    UpdateUserFullNameDto dto) =>
+authGroup.MapGet("/getUserName", async (ClaimsPrincipal user, IUserProfileService profileService) => 
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    Guid userGuidId;
+    if (!Guid.TryParse(userId, out userGuidId))
+    {
+        return Results.Unauthorized();
+    }
+    var result = await profileService.GetUserFullNameAsync(userGuidId);
+    return Results.Ok(result);
+});
+
+authGroup.MapPost("/updateUserName", async (ClaimsPrincipal user, IUserProfileService profileService,
+    UserNameDto dto) =>
 { 
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
     Guid userGuidId;

@@ -63,12 +63,15 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {login} from '../services/auth'
+import { getUserName } from '../services/profile'
 import { isUserWithName } from '../services/profile'
+import { usePiniaStore } from '../plugins/piniaStorage'
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
+const session = usePiniaStore()
 
 const logInError = ref('')
 
@@ -81,6 +84,10 @@ async function handleLogIn() {
       router.push('/userNameForm')
     }
     else{
+      const response = await getUserName()
+      session.firstName = response.firstName
+      session.lastName = response.lastName
+      session.isUser = true
       router.push('/home')
     }
   }

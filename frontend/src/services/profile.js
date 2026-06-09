@@ -9,5 +9,9 @@ export async function updateUserFullName(firstName, lastName){
     firstName: firstName,
     lastName: lastName
   }
-  return await axiosInstance.post('/api/updateUserFullName', data)
+  await axiosInstance.post('/api/updateUserName', data)
+}
+export async function getUserName(){
+  const response = await axiosInstance.get('/api/getUserName')
+  return response.data
 }

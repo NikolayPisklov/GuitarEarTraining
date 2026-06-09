@@ -54,14 +54,19 @@
 import { ref } from 'vue'
 import { updateUserFullName } from '../services/profile';
 import { useRouter } from 'vue-router';
+import { usePiniaStore } from '../plugins/piniaStorage';
 
 const router = useRouter()
 const firstName = ref('')
 const lastName = ref('')
+const session = usePiniaStore()
 
 async function handleSubmit() {
   try{
     await updateUserFullName(firstName.value, lastName.value)
+    session.firstName = firstName.value
+    session.lastName = lastName.value
+    session.isUser = true
     router.push('/home')
   }
   catch(error){

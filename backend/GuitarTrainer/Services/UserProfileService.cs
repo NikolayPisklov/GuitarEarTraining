@@ -1,14 +1,25 @@
-﻿using GuitarTrainer.Model;
+﻿using GuitarTrainer.Dtos;
+using GuitarTrainer.Model;
 
 namespace GuitarTrainer.Services
 {
-    public class UserProfileService: IUserProfileService
+    public class UserProfileService : IUserProfileService
     {
         private readonly AppDbContext _db;
         
         public UserProfileService(AppDbContext db) 
         {
             _db = db;
+        }
+
+        public async Task<UserNameDto> GetUserFullNameAsync(Guid userId)
+        {
+            var user = await _db.Users.FindAsync(userId);
+            if (user is null)
+            {
+                throw new Exception();
+            }
+            return new UserNameDto(user.FirstName, user.LastName);
         }
 
         public async Task<bool> IsUserWithNameAsync(Guid userId) 

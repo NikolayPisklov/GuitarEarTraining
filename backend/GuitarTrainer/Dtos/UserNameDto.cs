@@ -1,6 +1,6 @@
 ﻿namespace GuitarTrainer.Dtos
 {
-    public record UpdateUserFullNameDto(
+    public record UserNameDto(
     string FirstName,
     string LastName);
 }
