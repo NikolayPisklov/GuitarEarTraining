@@ -9,18 +9,38 @@
           Guitar Trainer
         </RouterLink>
 
-        <RouterLink v-if="!session.isUser"
-          to="/login"
-          class="absolute right-5 inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
-        >
-          Войти в аккаунт
-        </RouterLink>
-        <RouterLink v-if="!session.isUser"
-          to="/"
-          class="absolute right-40 inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
-        >
-          Регистрация
-        </RouterLink>
+        <div class="absolute right-5 flex items-center gap-3">
+          <RouterLink
+            v-if="!session.isUser"
+            to="/"
+            class="inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            Регистрация
+          </RouterLink>
+
+          <RouterLink
+            v-if="!session.isUser"
+            to="/login"
+            class="inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            Войти в аккаунт
+          </RouterLink>
+
+          <RouterLink
+            v-if="session.isUser"
+            to="/home"
+            class="inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            Главная
+          </RouterLink>
+
+          <button
+            v-if="session.isUser" @click="logoutButtonClick"
+            class="inline-flex h-9 items-center rounded-md border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            Выйти
+          </button>
+        </div>
       </div>
     </header>
 
@@ -32,6 +52,20 @@
 
 <script setup>
   import { usePiniaStore } from './plugins/piniaStorage';
+  import { logout } from './services/auth';
+  import { useRouter } from 'vue-router';
 
   const session = usePiniaStore()
+  const router = useRouter()
+
+  async function logoutButtonClick(){
+    try{
+      await logout()
+      session.$reset()
+      router.push('/login')
+    }
+    catch(error){
+      console.log(error.response)
+    }
+  }
 </script>

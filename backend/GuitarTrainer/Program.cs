@@ -65,6 +65,12 @@ using var scoped = app.Services.CreateScope();
 var authGroup = app.MapGroup("/api");
 authGroup.RequireAuthorization();
 
+app.MapPost("/logout", async (SignInManager<AppUser> signInManager) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.Ok();
+});
+
 authGroup.MapGet("/isUserWithName", async (ClaimsPrincipal user, IUserProfileService profileService) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;

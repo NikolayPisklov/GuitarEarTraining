@@ -17,3 +17,7 @@ export async function login(email, password){
   const response = await axiosInstance.post("/login?useCookies=true", data)
   return response.data
 }
+
+export async function logout(){
+  await axiosInstance.post("/logout")
+}
