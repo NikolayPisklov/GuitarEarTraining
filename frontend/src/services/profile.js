@@ -1,7 +1,7 @@
 import axiosInstance from "./api";
 
 export async function isUserWithName(){
-  const response = await axiosInstance.get('/api/isUserWithName')
+  const response = await axiosInstance.get('/profile/isUserWithName')
   return response.data
 }
 export async function updateUserFullName(firstName, lastName){
@@ -9,9 +9,9 @@ export async function updateUserFullName(firstName, lastName){
     firstName: firstName,
     lastName: lastName
   }
-  await axiosInstance.post('/api/updateUserName', data)
+  await axiosInstance.post('/profile/updateUserName', data)
 }
 export async function getUserName(){
-  const response = await axiosInstance.get('/api/getUserName')
+  const response = await axiosInstance.get('/profile/getUserName')
   return response.data
 }

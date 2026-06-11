@@ -13,7 +13,6 @@ namespace GuitarTrainer.Model
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<Attempt> Attempts { get; set; }
         public DbSet<Sample> Samples { get; set; }
-        public DbSet<Type> Types { get; set; } 
         public DbSet<AnswerOption> AnswerOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -24,11 +23,6 @@ namespace GuitarTrainer.Model
             {
                 entity.Property(user => user.FirstName).HasMaxLength(100);
                 entity.Property(user => user.LastName).HasMaxLength(100);
-            });
-            builder.Entity<Type>(entity =>
-            {
-                entity.Property(t => t.Title).HasMaxLength(100);
-                entity.HasIndex(t => t.Title).IsUnique();
             });
             builder.Entity<Exercise>(entity =>
             {
@@ -41,8 +35,8 @@ namespace GuitarTrainer.Model
             });
             builder.Entity<AnswerOption>(entity =>
             {
-                entity.HasIndex(a => new { a.ExerciseId, a.Code}).IsUnique();
-                entity.Property(a => a.Code).HasMaxLength(100);
+                entity.HasIndex(a => new { a.ExerciseId, a.TitleCode}).IsUnique();
+                entity.Property(a => a.TitleCode).HasMaxLength(100);
             });
 
         }
