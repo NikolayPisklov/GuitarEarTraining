@@ -44,6 +44,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<PitchExerciseService>();
+builder.Services.AddScoped<IExerciseResultService, ExerciseResultService>();
 
 var app = builder.Build();
 
@@ -109,11 +110,30 @@ pitch.MapGet("/getSamples", async (PitchExerciseService pitchService) =>
     var samples = await pitchService.GetSamplesForExerciseAsync();
     return Results.Ok(samples);
 });
+pitch.MapGet("/getAnswerOptions", async (PitchExerciseService pitchService) => 
+{
+    var options = await pitchService.GetAnswerOptionsAsync();
+    return Results.Ok(options);
+});
 
 var exerciseResult = app.MapGroup("/exerciseResult");
 exerciseResult.RequireAuthorization();
 
-//Calculate result
-//Get results for exercise
+exerciseResult.MapPost("/addAttempt", async (IExerciseResultService resultService, 
+    ClaimsPrincipal user, AddRequestAttemptDto dto) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    var userGuidId = UserIdParsingService.ParseUserId(userId);
+    await resultService.InsertAttemptAsync(dto.Answers, dto.ExerciseId, userGuidId);
+    return Results.Ok();
+});
+exerciseResult.MapGet("/getLatestAttemptScore", async (IExerciseResultService resultService, int exerciseId,
+    ClaimsPrincipal user) => 
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    double score = await resultService.GetScoreOfLastAttemptAsync(exerciseId, 
+        UserIdParsingService.ParseUserId(userId));
+    return Results.Ok(score);
+});
 
 app.Run();

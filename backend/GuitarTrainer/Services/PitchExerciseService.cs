@@ -13,6 +13,16 @@ namespace GuitarTrainer.Services
             _db = db;
         }
 
+        public Task<List<AnswerOptionDto>> GetAnswerOptionsAsync()
+        {
+            var answerOptions = _db.AnswerOptions
+                .Where(a => a.ExerciseId == (int)ExerciseEnum.Pitch)
+                .OrderBy(a => a.Id)
+                .Select(a => new AnswerOptionDto(a.Id, a.TitleCode))
+                .ToListAsync();
+            return answerOptions;
+        }
+
         public async Task<List<SampleExerciseTaskDto>> GetSamplesForExerciseAsync()
         {
             var samples = await _db.Samples
