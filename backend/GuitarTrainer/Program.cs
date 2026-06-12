@@ -33,7 +33,8 @@ builder.Services.Configure<CookieAuthenticationOptions>(
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+    .UseSnakeCaseNamingConvention();
 });
 
 builder.Services
@@ -42,6 +43,8 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<PitchExerciseService>();
+builder.Services.AddScoped<IExerciseResultService, ExerciseResultService>();
 
 var app = builder.Build();
 
@@ -53,7 +56,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
 app.UseCors("Frontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -61,51 +68,72 @@ app.MapIdentityApi<AppUser>();
 
 using var scoped = app.Services.CreateScope();
 
-//Endpoints
-var authGroup = app.MapGroup("/api");
-authGroup.RequireAuthorization();
-
 app.MapPost("/logout", async (SignInManager<AppUser> signInManager) =>
 {
     await signInManager.SignOutAsync();
     return Results.Ok();
 });
 
-authGroup.MapGet("/isUserWithName", async (ClaimsPrincipal user, IUserProfileService profileService) =>
+var profile = app.MapGroup("/profile");
+profile.RequireAuthorization();
+
+profile.MapGet("/isUserWithName", async (ClaimsPrincipal user, IUserProfileService profileService) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    Guid userGuidId;
-    if(!Guid.TryParse(userId, out userGuidId))
-    {
-        return Results.Unauthorized();
-    }
+    var userGuidId = UserIdParsingService.ParseUserId(userId);
     bool result = await profileService.IsUserWithNameAsync(userGuidId);
     return Results.Ok(result);
 });
 
-authGroup.MapGet("/getUserName", async (ClaimsPrincipal user, IUserProfileService profileService) => 
+profile.MapGet("/getUserName", async (ClaimsPrincipal user, IUserProfileService profileService) => 
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    Guid userGuidId;
-    if (!Guid.TryParse(userId, out userGuidId))
-    {
-        return Results.Unauthorized();
-    }
+    var userGuidId = UserIdParsingService.ParseUserId(userId);
     var result = await profileService.GetUserFullNameAsync(userGuidId);
     return Results.Ok(result);
 });
 
-authGroup.MapPost("/updateUserName", async (ClaimsPrincipal user, IUserProfileService profileService,
+profile.MapPost("/updateUserName", async (ClaimsPrincipal user, IUserProfileService profileService,
     UserNameDto dto) =>
 { 
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
-    Guid userGuidId;
-    if (!Guid.TryParse(userId, out userGuidId))
-    {
-        return Results.BadRequest("User Id parsing error!");
-    }
+    var userGuidId = UserIdParsingService.ParseUserId(userId);
     await profileService.UpdateUserFullNameAsync(userGuidId, dto.FirstName, dto.LastName);
     return Results.Ok();
+});
+
+var pitch = app.MapGroup("/pitch");
+pitch.RequireAuthorization();
+
+pitch.MapGet("/getSamples", async (PitchExerciseService pitchService) => 
+{
+    var samples = await pitchService.GetSamplesForExerciseAsync();
+    return Results.Ok(samples);
+});
+pitch.MapGet("/getAnswerOptions", async (PitchExerciseService pitchService) => 
+{
+    var options = await pitchService.GetAnswerOptionsAsync();
+    return Results.Ok(options);
+});
+
+var exerciseResult = app.MapGroup("/exerciseResult");
+exerciseResult.RequireAuthorization();
+
+exerciseResult.MapPost("/addAttempt", async (IExerciseResultService resultService, 
+    ClaimsPrincipal user, AddRequestAttemptDto dto) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    var userGuidId = UserIdParsingService.ParseUserId(userId);
+    await resultService.InsertAttemptAsync(dto.Answers, dto.ExerciseId, userGuidId);
+    return Results.Ok();
+});
+exerciseResult.MapGet("/getLatestAttemptScore", async (IExerciseResultService resultService, int exerciseId,
+    ClaimsPrincipal user) => 
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    double score = await resultService.GetScoreOfLastAttemptAsync(exerciseId, 
+        UserIdParsingService.ParseUserId(userId));
+    return Results.Ok(score);
 });
 
 app.Run();

@@ -10,23 +10,41 @@
     </div>
 
     <div class="grid gap-4 sm:grid-cols-2">
-      <button
-        v-for="item in trainingItems"
-        :key="item"
-        type="button"
-        class="flex min-h-32 items-center justify-center rounded-lg border border-zinc-200 bg-white p-5 text-center text-base font-semibold text-zinc-950 shadow-sm transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
-      >
-        {{ item }}
-      </button>
+      <template v-for="item in trainingItems" :key="item.label">
+        <RouterLink
+          v-if="item.to"
+          :to="item.to"
+          class="flex min-h-32 items-center justify-center rounded-lg border border-zinc-200 bg-white p-5 text-center text-base font-semibold text-zinc-950 shadow-sm transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+        >
+          {{ item.label }}
+        </RouterLink>
+
+        <button
+          v-else
+          type="button"
+          class="flex min-h-32 items-center justify-center rounded-lg border border-zinc-200 bg-white p-5 text-center text-base font-semibold text-zinc-950 shadow-sm transition hover:border-amber-500 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300"
+        >
+          {{ item.label }}
+        </button>
+      </template>
     </div>
   </section>
 </template>
 
 <script setup>
 const trainingItems = [
-  'Тренировка питча',
-  'Бэнды',
-  'Рассинхрон',
-  'Подбор на слух',
+  {
+    label: 'Тренировка питча',
+    to: '/pitch-training',
+  },
+  {
+    label: 'Бэнды',
+  },
+  {
+    label: 'Рассинхрон',
+  },
+  {
+    label: 'Подбор на слух',
+  },
 ]
 </script>
