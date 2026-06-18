@@ -39,6 +39,7 @@ const trainingItems = [
   },
   {
     label: 'Бэнды',
+    to: '/bend-training',
   },
   {
     label: 'Рассинхрон',

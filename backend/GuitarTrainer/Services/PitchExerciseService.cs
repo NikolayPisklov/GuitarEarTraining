@@ -1,4 +1,5 @@
 ﻿using GuitarTrainer.Dtos;
+using GuitarTrainer.Enums;
 using GuitarTrainer.Model;
 using Microsoft.EntityFrameworkCore;
 

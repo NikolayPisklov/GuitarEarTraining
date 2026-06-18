@@ -4,6 +4,7 @@ import Register from '../components/Register.vue'
 import LogIn from '../components/LogIn.vue'
 import UserNameForm from '../components/UserNameForm.vue'
 import PitchTraining from '../components/PitchTraining.vue'
+import BendTraining from '../components/BendTraining.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/pitch-training',
     name: 'pitchTraining',
     component: PitchTraining
+  },
+  {
+    path: '/bend-training',
+    name: 'bendTraining',
+    component: BendTraining
   },
   {
     path: '/userNameForm',

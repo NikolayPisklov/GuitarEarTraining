@@ -1,9 +1,15 @@
 using GuitarTrainer.Dtos;
+using GuitarTrainer.Enums;
 using GuitarTrainer.Model;
 using GuitarTrainer.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NAudio.Wave;
+using NWaves.Audio;
+using NWaves.FeatureExtractors;
+using NWaves.FeatureExtractors.Options;
+using NWaves.Signals;
 using Scalar.AspNetCore;
 using System.Security.Claims;
 
@@ -45,6 +51,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<PitchExerciseService>();
 builder.Services.AddScoped<IExerciseResultService, ExerciseResultService>();
+builder.Services.AddScoped<BendExerciseService>();
 
 var app = builder.Build();
 
@@ -116,10 +123,10 @@ pitch.MapGet("/getAnswerOptions", async (PitchExerciseService pitchService) =>
     return Results.Ok(options);
 });
 
-var exerciseResult = app.MapGroup("/exerciseResult");
-exerciseResult.RequireAuthorization();
+var sampleExerciseResult = app.MapGroup("/exerciseResult");
+sampleExerciseResult.RequireAuthorization();
 
-exerciseResult.MapPost("/addAttempt", async (IExerciseResultService resultService, 
+sampleExerciseResult.MapPost("/addAttempt", async (IExerciseResultService resultService, 
     ClaimsPrincipal user, AddRequestAttemptDto dto) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -127,7 +134,7 @@ exerciseResult.MapPost("/addAttempt", async (IExerciseResultService resultServic
     await resultService.InsertAttemptAsync(dto.Answers, dto.ExerciseId, userGuidId);
     return Results.Ok();
 });
-exerciseResult.MapGet("/getLatestAttemptScore", async (IExerciseResultService resultService, int exerciseId,
+sampleExerciseResult.MapGet("/getLatestAttemptScore", async (IExerciseResultService resultService, int exerciseId,
     ClaimsPrincipal user) => 
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -135,5 +142,17 @@ exerciseResult.MapGet("/getLatestAttemptScore", async (IExerciseResultService re
         UserIdParsingService.ParseUserId(userId));
     return Results.Ok(score);
 });
+
+var bendsExerciseGroup = app.MapGroup("/bends");
+bendsExerciseGroup.RequireAuthorization();
+
+bendsExerciseGroup.MapPost("/whole-step", async (IFormFile file, BendExerciseService service) => 
+{
+    var result = await service.ProcessUserBendFileAsync(file, BendType.WholeStepCents);
+    return Results.Ok(result);
+}).DisableAntiforgery();
+bendsExerciseGroup.MapPost("/half-step", async (IFormFile file, BendExerciseService service) => 
+{
+}).DisableAntiforgery();
 
 app.Run();
