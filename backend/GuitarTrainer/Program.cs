@@ -1,6 +1,7 @@
 using Carter;
 using GuitarTrainer.Model;
 using GuitarTrainer.Services;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,13 @@ builder.Services
 builder.Services.AddCarter();
 
 builder.Services.AddAuthorization();
-builder.Services.AddAntiforgery();
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+
+    options.Cookie.SameSite = SameSiteMode.None; 
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<PitchExerciseService>();
@@ -74,5 +81,15 @@ app.UseAntiforgery();
 app.MapIdentityApi<AppUser>();
 
 app.MapCarter();
+
+app.MapGet("/csrf-token", (IAntiforgery antiforgery, HttpContext context) =>
+{
+    var tokens = antiforgery.GetAndStoreTokens(context);
+
+    return Results.Ok(new
+    {
+        token = tokens.RequestToken
+    });
+});
 
 app.Run();

@@ -20,36 +20,43 @@ namespace GuitarTrainer.Services
         {
             var centDifference = await CalculateBendDifferenceInCentsAsync(file);
             var bendCents = (double)bendType;
-            var result = FormBendExerciseResult(centDifference, bendCents);
+            var result = CreateBendExerciseResult(centDifference, bendCents);
             return result;
         }
-        public BendExerciseResultDto FormBendExerciseResult(double differenceInCents, double bendCents) 
+        private BendExerciseResultDto CreateBendExerciseResult(double differenceInCents, double bendCents) 
         {
-            if (bendCents - differenceInCents <= 5.0)
+            double resultDifference = bendCents - differenceInCents;
+            if (resultDifference <= 5.0 && resultDifference >= -5)//Almost not noticable difference in pitch
             {
-                return new BendExerciseResultDto(true, differenceInCents);
+                return new BendExerciseResultDto(true, resultDifference);
             }
-            else if (bendCents - differenceInCents <= 10)
+            else if (resultDifference <= 10 && resultDifference >= -10)//Noticable for a trained ear
             {
-                return new BendExerciseResultDto(true, differenceInCents);
+                return new BendExerciseResultDto(true, resultDifference);
             }
-            else if (bendCents - differenceInCents <= 15)
+            else if (resultDifference <= 15 && resultDifference >= -15)//Okay result 
             {
-                return new BendExerciseResultDto(true, differenceInCents);
+                return new BendExerciseResultDto(true, resultDifference);
             }
-            else
+            else //Difference to the point, where the note is noticably placed between the semitones. Not Acceptable :) 
             {
-                return new BendExerciseResultDto(false, differenceInCents);
+                return new BendExerciseResultDto(false, resultDifference);
             }
         }
-        public async Task<double> CalculateBendDifferenceInCentsAsync(IFormFile file) 
+        private async Task<double> CalculateBendDifferenceInCentsAsync(IFormFile file) 
         {
-            var points = await GetCentsPointsOverTimeAsync(file);
-            var maxPoint = points.Max(p => p.RelativeCents);
-            var minPoint = points.Min(p => p.RelativeCents);
-            return maxPoint - minPoint;
+            var points = await GetCentsValuesOverTimeAsync(file);
+            var ordered = points
+                .Select(p => p.RelativeCents)
+                .OrderBy(x => x)
+                .ToList();
+
+            var min = ordered[(int)(ordered.Count * 0.05)];
+            var max = ordered[(int)(ordered.Count * 0.95)];
+
+            return max - min;
         }
-        private async Task<List<PitchPoint>> GetCentsPointsOverTimeAsync(IFormFile file)
+        private async Task<List<PitchPoint>> GetCentsValuesOverTimeAsync(IFormFile file)
         {
             using var stream = file.OpenReadStream();
 
@@ -77,7 +84,7 @@ namespace GuitarTrainer.Services
 
                 var output = outputs.First().AsTensor<float>();
 
-                var (bin, confidence) = GetBestBin(output);
+                var (bin, confidence) = GetWeightedBin(output);
 
                 double cents = BinToAbsoluteCents(bin);
 
@@ -93,7 +100,7 @@ namespace GuitarTrainer.Services
 
             return result;
         }
-        private static double BinToAbsoluteCents(int bin)
+        private static double BinToAbsoluteCents(double bin)
         {
             return bin * 20.0 + 1997.3794084376191;
         }
@@ -112,6 +119,38 @@ namespace GuitarTrainer.Services
             }
 
             return (bestBin, bestValue);
+        }
+        private (double Bin, float Confidence) GetWeightedBin(Tensor<float> output)
+        {
+            int bestBin = 0;
+            float bestValue = output[0, 0];
+
+            for (int i = 1; i < 360; i++)
+            {
+                if (output[0, i] > bestValue)
+                {
+                    bestValue = output[0, i];
+                    bestBin = i;
+                }
+            }
+
+            int start = Math.Max(0, bestBin - 4);
+            int end = Math.Min(359, bestBin + 4);
+
+            double weightedSum = 0;
+            double weightSum = 0;
+
+            for (int i = start; i <= end; i++)
+            {
+                double weight = output[0, i];
+
+                weightedSum += i * weight;
+                weightSum += weight;
+            }
+
+            double weightedBin = weightedSum / weightSum;
+
+            return (weightedBin, bestValue);
         }
         private float[] ReadSamples16kMono(Stream stream)
         {

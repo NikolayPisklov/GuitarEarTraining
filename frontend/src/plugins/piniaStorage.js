@@ -8,3 +8,10 @@ export const usePiniaStore = defineStore('user', {
     }),
     persist: true
 })
+
+export const useCsrfStore = defineStore("csrf", {
+    state: () => ({
+        token: null
+    }),
+    persist: true
+});

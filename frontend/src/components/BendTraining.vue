@@ -8,6 +8,28 @@
       </div>
 
       <form v-if="!isResultsVisible" class="mx-auto flex max-w-md flex-col gap-4" @submit.prevent="onSubmit">
+        <fieldset class="flex items-center justify-center gap-6">
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-950">
+            <input
+              v-model="selectedBendType"
+              type="radio"
+              value="whole-step"
+              class="h-4 w-4 accent-amber-600"
+            >
+            Бэнд на тон
+          </label>
+
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-950">
+            <input
+              v-model="selectedBendType"
+              type="radio"
+              value="half-step"
+              class="h-4 w-4 accent-amber-600"
+            >
+            Бэнд на пол тона
+          </label>
+        </fieldset>
+
         <input
           type="file"
           accept="audio/*"
@@ -27,7 +49,7 @@
           <button
             type="submit"
             class="inline-flex h-11 items-center rounded-md border border-amber-600 bg-amber-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:border-amber-700 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:border-zinc-300 disabled:bg-zinc-200 disabled:text-zinc-500 disabled:hover:border-zinc-300 disabled:hover:bg-zinc-200"
-            :disabled="!selectedFile || isSubmitting"
+            :disabled="!selectedFile || !selectedBendType || isSubmitting"
           >
             Отправить
           </button>
@@ -43,8 +65,14 @@
           <span>Обрабатываем ваш файл</span>
         </div>
 
-        <div v-else class="flex flex-col items-center gap-4">
-          <div>Результаты</div>
+        <div v-else-if="bendResult" class="flex flex-col items-center gap-4">
+          <div class="text-lg font-semibold">
+            {{ bendResult.isPassed ? 'Сдал' : 'Не сдал' }}
+          </div>
+
+          <div>
+            Разница в центах: {{ bendResult.centsDeviation.toFixed(2) }}
+          </div>
 
           <button
             type="button"
@@ -82,12 +110,14 @@
 
 <script setup>
 import { ref } from 'vue'
-import { submitBendFile } from '../services/bends'
+import { submitHalfStepBend, submitWholeStepBend } from '../services/bends'
 
 const isExerciseStarted = ref(false)
 const selectedFile = ref(null)
+const selectedBendType = ref(null)
 const isSubmitting = ref(false)
 const isResultsVisible = ref(false)
+const bendResult = ref(null)
 
 function onStartExerciseButtonClick() {
   isExerciseStarted.value = true
@@ -96,16 +126,21 @@ function onStartExerciseButtonClick() {
 function onFileChange(event) {
   selectedFile.value = event.target.files[0] ?? null
   isResultsVisible.value = false
+  bendResult.value = null
 }
 
 async function onSubmit() {
-  if (!selectedFile.value || isSubmitting.value) return
+  if (!selectedFile.value || !selectedBendType.value || isSubmitting.value) return
 
   isResultsVisible.value = true
   isSubmitting.value = true
 
   try{
-    await submitBendFile(selectedFile.value)
+    if (selectedBendType.value === 'whole-step') {
+      bendResult.value = await submitWholeStepBend(selectedFile.value)
+    } else {
+      bendResult.value = await submitHalfStepBend(selectedFile.value)
+    }
   }
   catch(error){
     console.log(error.response)
@@ -117,13 +152,17 @@ async function onSubmit() {
 
 function goBack() {
   selectedFile.value = null
+  selectedBendType.value = null
   isSubmitting.value = false
   isResultsVisible.value = false
+  bendResult.value = null
   isExerciseStarted.value = false
 }
 
 function onUploadAnotherFile() {
   selectedFile.value = null
+  selectedBendType.value = null
   isResultsVisible.value = false
+  bendResult.value = null
 }
 </script>

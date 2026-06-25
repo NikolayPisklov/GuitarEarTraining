@@ -18,7 +18,9 @@ namespace GuitarTrainer.EndpointModules
             });
             group.MapPost("/half-step", async (IFormFile file, BendExerciseService service) =>
             {
-            }).DisableAntiforgery();
+                var result = await service.ProcessUserBendFileAsync(file, BendType.HalfStepCents);
+                return Results.Ok(result);
+            });
         }
     }
 }
