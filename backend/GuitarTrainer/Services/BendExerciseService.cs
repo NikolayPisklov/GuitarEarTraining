@@ -26,19 +26,23 @@ namespace GuitarTrainer.Services
         private BendExerciseResultDto CreateBendExerciseResult(double differenceInCents, double bendCents) 
         {
             double resultDifference = bendCents - differenceInCents;
-            if (resultDifference <= 5.0 && resultDifference >= -5)//Almost not noticable difference in pitch
+            //Almost not noticable difference in pitch
+            if (resultDifference <= 5.0 && resultDifference >= -5)
             {
                 return new BendExerciseResultDto(true, resultDifference);
             }
-            else if (resultDifference <= 10 && resultDifference >= -10)//Noticable for a trained ear
+            //Noticable for a trained ear
+            else if (resultDifference <= 10 && resultDifference >= -10)
             {
                 return new BendExerciseResultDto(true, resultDifference);
             }
-            else if (resultDifference <= 15 && resultDifference >= -15)//Okay result 
+            //Okay result 
+            else if (resultDifference <= 15 && resultDifference >= -15)
             {
                 return new BendExerciseResultDto(true, resultDifference);
             }
-            else //Difference to the point, where the note is noticably placed between the semitones. Not Acceptable :) 
+            //Difference to the point, where the note is noticably placed between the semitones. Not Acceptable :) 
+            else
             {
                 return new BendExerciseResultDto(false, resultDifference);
             }
@@ -103,22 +107,6 @@ namespace GuitarTrainer.Services
         private static double BinToAbsoluteCents(double bin)
         {
             return bin * 20.0 + 1997.3794084376191;
-        }
-        private static (int Bin, float Confidence) GetBestBin(Tensor<float> output)
-        {
-            int bestBin = 0;
-            float bestValue = output[0, 0];
-
-            for (int i = 1; i < 360; i++)
-            {
-                if (output[0, i] > bestValue)
-                {
-                    bestValue = output[0, i];
-                    bestBin = i;
-                }
-            }
-
-            return (bestBin, bestValue);
         }
         private (double Bin, float Confidence) GetWeightedBin(Tensor<float> output)
         {

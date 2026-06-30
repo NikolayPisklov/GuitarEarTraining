@@ -1,4 +1,5 @@
 using Carter;
+using GuitarTrainer.Exceptions;
 using GuitarTrainer.Model;
 using GuitarTrainer.Services;
 using Microsoft.AspNetCore.Antiforgery;
@@ -22,7 +23,6 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
-
 builder.Services.Configure<CookieAuthenticationOptions>(
     IdentityConstants.ApplicationScheme,
     options =>
@@ -58,6 +58,15 @@ builder.Services.AddScoped<PitchExerciseService>();
 builder.Services.AddScoped<IExerciseResultService, ExerciseResultService>();
 builder.Services.AddScoped<BendExerciseService>();
 
+builder.Services.AddProblemDetails(configure =>
+{
+    configure.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+    };
+});
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -66,7 +75,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
@@ -90,6 +99,10 @@ app.MapGet("/csrf-token", (IAntiforgery antiforgery, HttpContext context) =>
     {
         token = tokens.RequestToken
     });
+});
+app.MapGet("/exceptionEndpoint", (IAntiforgery antiforgery, HttpContext context) =>
+{
+    throw new Exception("Hello idiot)");
 });
 
 app.Run();
