@@ -17,7 +17,7 @@ namespace GuitarTrainer.Services
         public Task<List<AnswerOptionDto>> GetAnswerOptionsAsync()
         {
             var answerOptions = _db.AnswerOptions
-                .Where(a => a.ExerciseId == (int)ExerciseEnum.Pitch)
+                .Where(a => a.ExerciseId == (int)Exercises.Pitch)
                 .OrderBy(a => a.Id)
                 .Select(a => new AnswerOptionDto(a.Id, a.TitleCode))
                 .ToListAsync();
@@ -27,7 +27,7 @@ namespace GuitarTrainer.Services
         public async Task<List<SampleExerciseTaskDto>> GetSamplesForExerciseAsync()
         {
             var samples = await _db.Samples
-                .Where(s => s.ExerciseId == (int)ExerciseEnum.Pitch)
+                .Where(s => s.ExerciseId == (int)Exercises.Pitch)
                 .OrderBy(x => Guid.NewGuid())
                 .Take(5)
                 .Select(s => new SampleExerciseTaskDto

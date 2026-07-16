@@ -1,6 +1,6 @@
 ﻿namespace GuitarTrainer.Enums
 {
-    public enum ExerciseEnum
+    public enum Exercises
     {
         Pitch = 1,
         WholeStepBends = 2,

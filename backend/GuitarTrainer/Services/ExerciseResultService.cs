@@ -1,4 +1,6 @@
-﻿using GuitarTrainer.Model;
+﻿using GuitarTrainer.Dtos;
+using GuitarTrainer.Enums;
+using GuitarTrainer.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace GuitarTrainer.Services
@@ -26,6 +28,21 @@ namespace GuitarTrainer.Services
         {
             int correctCount = answers.Count(a => a);
             double score = (correctCount * 100) / answers.Count;
+            var attempt = new Attempt
+            {
+                UserId = userId,
+                ExerciseId = exerciseId,
+                AttemptDate = DateTime.UtcNow,
+                Score = score
+            };
+            _db.Add(attempt);
+            await _db.SaveChangesAsync();
+        }
+        public async Task InsertAttemptAsync(BendExerciseResultDto result, int exerciseId, Guid userId) 
+        {
+            double score;
+            var deviation = Math.Abs(result.centsDeviation);
+            score = Math.Clamp((15 - deviation) / 15.0 * 100, 0, 100);
             var attempt = new Attempt
             {
                 UserId = userId,

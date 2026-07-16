@@ -16,6 +16,7 @@ namespace GuitarTrainer.Exceptions
 
             httpContext.Response.StatusCode = exception switch
             {
+                InvalidRecordException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
 

@@ -9,6 +9,32 @@
       </p>
     </div>
 
+    <fieldset class="mx-auto mb-6 w-full max-w-md">
+      <legend class="mb-2 text-sm font-medium text-zinc-950">
+        Интервал бенда
+      </legend>
+      <div class="flex gap-6">
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-950">
+          <input
+            v-model="bendInterval"
+            type="radio"
+            value="tone"
+            class="h-4 w-4 accent-amber-500"
+          >
+          Бенд на тон
+        </label>
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-950">
+          <input
+            v-model="bendInterval"
+            type="radio"
+            value="semitone"
+            class="h-4 w-4 accent-amber-500"
+          >
+          Бенд на пол тона
+        </label>
+      </div>
+    </fieldset>
+
     <div class="mx-auto mb-4 w-full max-w-md">
       <label for="audio-input" class="mb-1.5 block text-sm font-medium text-zinc-950">
         Устройство записи
@@ -53,6 +79,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { submitHalfStepBend, submitWholeStepBend } from '../services/bends'
 
 const SILENCE_THRESHOLD = 0.005
 const SILENCE_FRAME_DURATION_MS = 20
@@ -60,6 +87,7 @@ const SILENCE_PADDING_MS = 100
 
 const audioInputDevices = ref([])
 const selectedAudioInputId = ref('')
+const bendInterval = ref('tone')
 const isLoadingAudioInputs = ref(false)
 const isRecording = ref(false)
 const audioDevicesError = ref('')
@@ -218,9 +246,12 @@ async function stopRecording(prepareSamples = true) {
   recordedSamples.value = trimEdgeSilence(allSamples, sampleRate)
   recordedSampleRate.value = sampleRate
   recordedChunks = []
-  debugger
-  // TODO: Здесь реализуйте отправку recordedSamples.value (Float32Array) на бэк.
-  // Частота получившегося массива находится в recordedSampleRate.value.
+  if(bendInterval.value === 'semitone'){
+    const proccessResult = await submitHalfStepBend(recordedSamples.value, recordedSampleRate.value)
+  }
+  else{
+    const proccessResult = await submitWholeStepBend(recordedSamples.value, recordedSampleRate.value)
+  }
 }
 
 async function onStartRecordingButtonClick() {

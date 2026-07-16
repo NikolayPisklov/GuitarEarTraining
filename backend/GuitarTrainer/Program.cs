@@ -48,7 +48,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
-
     options.Cookie.SameSite = SameSiteMode.None; 
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
@@ -99,10 +98,6 @@ app.MapGet("/csrf-token", (IAntiforgery antiforgery, HttpContext context) =>
     {
         token = tokens.RequestToken
     });
-});
-app.MapGet("/exceptionEndpoint", (IAntiforgery antiforgery, HttpContext context) =>
-{
-    throw new Exception("Hello idiot)");
 });
 
 app.Run();
